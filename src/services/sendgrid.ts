@@ -1,9 +1,12 @@
 import sgMail from '@sendgrid/mail';
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
-
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@friendshardware.store';
 const FROM_NAME = process.env.SENDGRID_FROM_NAME || 'Friends Hardware';
+
+function getSgMail() {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+  return sgMail;
+}
 
 interface OrderUser {
   name: string;
@@ -76,7 +79,7 @@ export async function sendOrderConfirmation(order: OrderData, user: OrderUser): 
     `,
   };
 
-  await sgMail.send(msg);
+  await getSgMail().send(msg);
 }
 
 export async function sendShipmentNotification(order: OrderData, user: OrderUser): Promise<void> {
@@ -101,7 +104,7 @@ export async function sendShipmentNotification(order: OrderData, user: OrderUser
     `,
   };
 
-  await sgMail.send(msg);
+  await getSgMail().send(msg);
 }
 
 export async function sendPasswordReset(email: string, token: string): Promise<void> {
@@ -128,7 +131,7 @@ export async function sendPasswordReset(email: string, token: string): Promise<v
     `,
   };
 
-  await sgMail.send(msg);
+  await getSgMail().send(msg);
 }
 
 export async function sendWelcomeEmail(user: { name: string; email: string }): Promise<void> {
@@ -161,7 +164,7 @@ export async function sendWelcomeEmail(user: { name: string; email: string }): P
     `,
   };
 
-  await sgMail.send(msg);
+  await getSgMail().send(msg);
 }
 
 export async function sendNewsletterEmail(
@@ -176,5 +179,5 @@ export async function sendNewsletterEmail(
     html: content,
   }));
 
-  await sgMail.send(messages);
+  await getSgMail().send(messages);
 }

@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Review from '@/models/Review';
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -14,8 +14,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     await connectDB();
     const userId = (session.user as { id: string }).id;
     const body = await request.json();
+    const { id } = await params;
 
-    const review = await Review.findOne({ _id: params.id, user: userId });
+    const review = await Review.findOne({ _id: id, user: userId });
     if (!review) {
       return NextResponse.json({ success: false, error: 'Review not found' }, { status: 404 });
     }
@@ -32,7 +33,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -42,8 +43,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     await connectDB();
     const userId = (session.user as { id: string; role?: string }).id;
     const userRole = (session.user as { role?: string }).role;
+    const { id } = await params;
 
-    const query = userRole === 'admin' ? { _id: params.id } : { _id: params.id, user: userId };
+    const query = userRole === 'admin' ? { _id: id } : { _id: id, user: userId };
     const review = await Review.findOneAndDelete(query);
 
     if (!review) {

@@ -5,11 +5,11 @@ import connectDB from '@/lib/db';
 import Product from '@/models/Product';
 import mongoose from 'mongoose';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
 
-    const { id } = params;
+    const { id } = await params;
     let product;
 
     if (mongoose.Types.ObjectId.isValid(id)) {
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || (session.user as { role?: string }).role !== 'admin') {
@@ -40,7 +40,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     await connectDB();
     const body = await request.json();
-    const product = await Product.findByIdAndUpdate(params.id, body, {
+    const { id } = await params;
+    const product = await Product.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
     }).populate('category', 'name slug');
@@ -56,7 +57,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || (session.user as { role?: string }).role !== 'admin') {
@@ -64,7 +65,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     await connectDB();
-    const product = await Product.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const product = await Product.findByIdAndDelete(id);
 
     if (!product) {
       return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });

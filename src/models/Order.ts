@@ -120,7 +120,8 @@ const orderSchema = new Schema<IOrder>(
   { timestamps: true }
 );
 
-orderSchema.pre('save', function (next) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(orderSchema as any).pre('save', function (this: IOrder) {
   if (this.isNew) {
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -130,7 +131,6 @@ orderSchema.pre('save', function (next) {
       timestamp: new Date(),
     });
   }
-  next();
 });
 
 orderSchema.index({ user: 1, createdAt: -1 });

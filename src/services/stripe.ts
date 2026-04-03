@@ -1,15 +1,17 @@
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-05-28.basil',
-});
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-05-28.basil',
+  });
+}
 
 export async function createPaymentIntent(
   amount: number,
   currency: string = 'inr',
   metadata: Record<string, string> = {}
 ): Promise<Stripe.PaymentIntent> {
-  return stripe.paymentIntents.create({
+  return getStripe().paymentIntents.create({
     amount: Math.round(amount * 100),
     currency,
     metadata,
@@ -38,7 +40,7 @@ export async function createCheckoutSession(
     quantity: item.quantity,
   }));
 
-  return stripe.checkout.sessions.create({
+  return getStripe().checkout.sessions.create({
     payment_method_types: ['card'],
     line_items: lineItems,
     mode: 'payment',
@@ -49,14 +51,14 @@ export async function createCheckoutSession(
 }
 
 export async function retrievePaymentIntent(id: string): Promise<Stripe.PaymentIntent> {
-  return stripe.paymentIntents.retrieve(id);
+  return getStripe().paymentIntents.retrieve(id);
 }
 
 export function constructWebhookEvent(
   body: string | Buffer,
   signature: string
 ): Stripe.Event {
-  return stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
+  return getStripe().webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
 }
 
-export default stripe;
+export default getStripe;

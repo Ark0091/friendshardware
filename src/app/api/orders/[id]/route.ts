@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Order from '@/models/Order';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -12,10 +12,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     await connectDB();
+    const { id } = await params;
     const userId = (session.user as { id: string; role?: string }).id;
     const userRole = (session.user as { role?: string }).role;
 
-    const query = userRole === 'admin' ? { _id: params.id } : { _id: params.id, user: userId };
+    const query = userRole === 'admin' ? { _id: id } : { _id: id, user: userId };
     const order = await Order.findOne(query).populate('items.product', 'name images sku').lean();
 
     if (!order) {
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -42,7 +43,8 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     await connectDB();
 
-    const order = await Order.findById(params.id);
+    const { id } = await params;
+    const order = await Order.findById(id);
     if (!order) {
       return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });
     }

@@ -1,10 +1,12 @@
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+function getRazorpay() {
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID!,
+    key_secret: process.env.RAZORPAY_KEY_SECRET!,
+  });
+}
 
 export async function createOrder(
   amount: number,
@@ -18,7 +20,7 @@ export async function createOrder(
   receipt: string;
   status: string;
 }> {
-  const order = await razorpay.orders.create({
+  const order = await getRazorpay().orders.create({
     amount: Math.round(amount * 100),
     currency,
     receipt,
@@ -49,7 +51,7 @@ export function verifyPayment(
 }
 
 export async function fetchPayment(paymentId: string) {
-  return razorpay.payments.fetch(paymentId);
+  return getRazorpay().payments.fetch(paymentId);
 }
 
-export default razorpay;
+export default getRazorpay;

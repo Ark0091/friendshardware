@@ -33,10 +33,10 @@ export default function AdminDashboard() {
         <div className="mb-6 rounded-lg bg-white p-5 shadow-sm">
           <h2 className="mb-4 font-semibold text-gray-800">Revenue (Last 30 Days)</h2>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={data.revenueByDay}>
+            <BarChart data={data!.revenueByDay}>
               <XAxis dataKey="_id" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `₹${(v/1000).toFixed(0)}k`} />
-              <Tooltip formatter={(v: number) => formatPrice(v)} />
+              <Tooltip formatter={(v) => formatPrice(Number(v))} />
               <Bar dataKey="revenue" fill="#f97316" radius={[4,4,0,0]} />
             </BarChart>
           </ResponsiveContainer>

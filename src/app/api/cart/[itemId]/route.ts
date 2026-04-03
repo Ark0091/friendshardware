@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Cart from '@/models/Cart';
 
-export async function PATCH(request: NextRequest, { params }: { params: { itemId: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ itemId: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -24,8 +24,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { itemId
       return NextResponse.json({ success: false, error: 'Cart not found' }, { status: 404 });
     }
 
+    const { itemId } = await params;
     const itemIndex = cart.items.findIndex(
-      (item: { _id: { toString: () => string } }) => item._id.toString() === params.itemId
+      (item: { _id: { toString: () => string } }) => item._id.toString() === itemId
     );
 
     if (itemIndex === -1) {
@@ -43,7 +44,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { itemId
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { itemId: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ itemId: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -58,8 +59,9 @@ export async function DELETE(request: NextRequest, { params }: { params: { itemI
       return NextResponse.json({ success: false, error: 'Cart not found' }, { status: 404 });
     }
 
+    const { itemId } = await params;
     cart.items = cart.items.filter(
-      (item: { _id: { toString: () => string } }) => item._id.toString() !== params.itemId
+      (item: { _id: { toString: () => string } }) => item._id.toString() !== itemId
     );
     await cart.save();
     await cart.populate('items.product', 'name images price stock sku');
