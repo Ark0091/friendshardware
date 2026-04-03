@@ -20,7 +20,7 @@ const checkoutSchema = z.object({
   city: z.string().min(2, 'City required'),
   state: z.string().min(2, 'State required'),
   pincode: z.string().regex(/^\d{6}$/, 'Invalid pincode'),
-  country: z.string().default('India'),
+  country: z.string().min(1, 'Country required'),
 });
 
 type CheckoutForm = z.infer<typeof checkoutSchema>;

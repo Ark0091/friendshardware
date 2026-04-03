@@ -1,16 +1,22 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ['./src/**/*.{ts,tsx}'],
   theme: {
+    container: { center: true, padding: '1rem' },
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        primary: { DEFAULT: '#f97316', foreground: '#ffffff' },
+        secondary: { DEFAULT: '#f3f4f6', foreground: '#111827' },
+        destructive: { DEFAULT: '#ef4444', foreground: '#ffffff' },
+        accent: { DEFAULT: '#fff7ed', foreground: '#9a3412' },
+        background: '#ffffff',
+        foreground: '#111827',
+        card: { DEFAULT: '#ffffff', foreground: '#111827' },
+        border: '#e5e7eb',
+        input: '#e5e7eb',
+        ring: '#f97316',
+        muted: { DEFAULT: '#f9fafb', foreground: '#6b7280' },
       },
     },
   },

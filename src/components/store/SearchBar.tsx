@@ -106,7 +106,7 @@ export default function SearchBar() {
               <div className="border-t px-4 py-2">
                 <button onClick={() => { router.push(`/products?search=${query}`); setIsOpen(false); }}
                   className="text-xs text-orange-500 hover:text-orange-600 font-medium">
-                  See all results for "{query}" →
+                  See all results for &quot;{query}&quot; →
                 </button>
               </div>
             </>

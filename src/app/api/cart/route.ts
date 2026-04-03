@@ -5,7 +5,7 @@ import connectDB from '@/lib/db';
 import Cart from '@/models/Cart';
 import Product from '@/models/Product';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {

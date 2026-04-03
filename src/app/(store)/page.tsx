@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, Truck, Shield, Headphones, Star } from 'lucide-react';
-import { PRODUCT_CATEGORIES, SITE_CONFIG } from '@/lib/constants';
+import { PRODUCT_CATEGORIES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
 

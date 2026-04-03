@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 import { PRODUCT_CATEGORIES, SITE_CONFIG } from '@/lib/constants';
 
 export default function Footer() {
@@ -21,14 +21,14 @@ export default function Footer() {
             </p>
             <div className="flex gap-3">
               {[
-                { href: SITE_CONFIG.social.facebook, Icon: Facebook },
-                { href: SITE_CONFIG.social.instagram, Icon: Instagram },
-                { href: SITE_CONFIG.social.twitter, Icon: Twitter },
-                { href: SITE_CONFIG.social.youtube, Icon: Youtube },
-              ].map(({ href, Icon }) => (
-                <a key={href} href={href} target="_blank" rel="noopener noreferrer"
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-700 text-gray-300 transition hover:bg-orange-500 hover:text-white">
-                  <Icon className="h-4 w-4" />
+                { href: SITE_CONFIG.social.facebook, label: 'F' },
+                { href: SITE_CONFIG.social.instagram, label: 'I' },
+                { href: SITE_CONFIG.social.twitter, label: 'X' },
+                { href: SITE_CONFIG.social.youtube, label: 'Y' },
+              ].map(({ href, label }) => (
+                <a key={label} href={href} target="_blank" rel="noopener noreferrer"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-700 text-gray-300 text-xs font-bold transition hover:bg-orange-500 hover:text-white">
+                  {label}
                 </a>
               ))}
             </div>
