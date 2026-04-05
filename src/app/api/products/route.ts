@@ -1,21 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Product from '@/models/Product';
+import { queryProducts } from '@/lib/sampleData';
 import type { SortOrder } from 'mongoose';
 
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category');
-    const search = searchParams.get('search');
-    const minPrice = searchParams.get('minPrice');
-    const maxPrice = searchParams.get('maxPrice');
-    const brand = searchParams.get('brand');
-    const inStock = searchParams.get('inStock');
-    const sort = searchParams.get('sort') || 'newest';
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '12');
+  const { searchParams } = new URL(request.url);
+  const category = searchParams.get('category');
+  const search = searchParams.get('search');
+  const minPrice = searchParams.get('minPrice');
+  const maxPrice = searchParams.get('maxPrice');
+  const brand = searchParams.get('brand');
+  const inStock = searchParams.get('inStock');
+  const sort = searchParams.get('sort') || 'newest';
+  const page = parseInt(searchParams.get('page') || '1');
+  const limit = parseInt(searchParams.get('limit') || '12');
 
+  try {
     await connectDB();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,8 +70,18 @@ export async function GET(request: NextRequest) {
         pages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
-    console.error('Products fetch error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to fetch products' }, { status: 500 });
+  } catch {
+    // MongoDB unavailable — fall back to sample data for preview
+    const { products, total } = queryProducts({ category, search, minPrice, maxPrice, brand, inStock, sort, page, limit });
+    return NextResponse.json({
+      success: true,
+      data: products,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   }
 }

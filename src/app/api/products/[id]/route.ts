@@ -3,13 +3,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Product from '@/models/Product';
+import { getProductByIdOrSlug } from '@/lib/sampleData';
 import mongoose from 'mongoose';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   try {
     await connectDB();
 
-    const { id } = await params;
     let product;
 
     if (mongoose.Types.ObjectId.isValid(id)) {
@@ -25,9 +26,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     return NextResponse.json({ success: true, data: product });
-  } catch (error) {
-    console.error('Product fetch error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to fetch product' }, { status: 500 });
+  } catch {
+    // MongoDB unavailable — fall back to sample data for preview
+    const product = getProductByIdOrSlug(id);
+    if (!product) {
+      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, data: product });
   }
 }
 
