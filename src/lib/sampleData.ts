@@ -545,7 +545,8 @@ export function queryProducts(params: {
   page?: number;
   limit?: number;
 }): { products: SampleProduct[]; total: number } {
-  const { category, search, minPrice, maxPrice, brand, inStock, sort = 'newest', page = 1, limit = 12 } = params;
+  const { category, search, minPrice, maxPrice, brand, inStock, page = 1, limit = 12 } = params;
+  const sort = params.sort ?? 'newest';
 
   let results = SAMPLE_PRODUCTS.filter((p) => p.isActive);
 
@@ -573,7 +574,8 @@ export function queryProducts(params: {
     rating: (a, b) => b.ratings.average - a.ratings.average,
     popular: (a, b) => b.ratings.count - a.ratings.count,
   };
-  if (sortMap[sort]) results.sort(sortMap[sort]);
+  const sortFn = sortMap[sort];
+  if (sortFn) results.sort(sortFn);
 
   const total = results.length;
   const skip = (page - 1) * limit;
