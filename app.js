@@ -1369,8 +1369,8 @@ function exportAllData() {
 }
 
 function clearAllData() {
-  const confirm = document.getElementById('clearDataConfirm')?.value;
-  if (confirm !== 'DELETE') { showToast('error', 'Incorrect', 'Please type DELETE to confirm'); return; }
+  const confirmText = document.getElementById('clearDataConfirm')?.value;
+  if (confirmText !== 'DELETE') { showToast('error', 'Incorrect', 'Please type DELETE to confirm'); return; }
   localStorage.removeItem('finoexpert_state');
   location.reload();
 }
@@ -1489,8 +1489,28 @@ function showToast(type, title, msg) {
   const icons = {success:'✅', error:'❌', warning:'⚠️', info:'ℹ️'};
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ️'}</span>
-    <div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>`;
+
+  // Build DOM safely to prevent XSS
+  const iconSpan = document.createElement('span');
+  iconSpan.className = 'toast-icon';
+  iconSpan.textContent = icons[type] || 'ℹ️';
+
+  const body = document.createElement('div');
+  body.className = 'toast-body';
+
+  const titleEl = document.createElement('div');
+  titleEl.className = 'toast-title';
+  titleEl.textContent = title;
+
+  const msgEl = document.createElement('div');
+  msgEl.className = 'toast-msg';
+  msgEl.textContent = msg;
+
+  body.appendChild(titleEl);
+  body.appendChild(msgEl);
+  toast.appendChild(iconSpan);
+  toast.appendChild(body);
+
   container.appendChild(toast);
   setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, 3500);
 }
