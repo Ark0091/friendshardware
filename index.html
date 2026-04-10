@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finoexpert &mdash; Smart Finance Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="sidebar expanded">
+    <div class="sidebar-header">
+      <span class="logo"><span class="logo-icon">&#x1F4C8;</span><span class="logo-text">Finoexpert</span></span>
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Toggle sidebar">&#9776;</button>
+    </div>
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      <ul>
+        <li><a href="#" class="nav-item active" data-page="dashboard"><span class="nav-icon">&#x1F3E0;</span><span class="nav-label">Dashboard</span></a></li>
+        <li><a href="#" class="nav-item" data-page="portfolio"><span class="nav-icon">&#x1F4BC;</span><span class="nav-label">Portfolio</span></a></li>
+        <li><a href="#" class="nav-item" data-page="market"><span class="nav-icon">&#x1F4CA;</span><span class="nav-label">Live Market</span></a></li>
+        <li><a href="#" class="nav-item" data-page="algobot"><span class="nav-icon">&#x1F916;</span><span class="nav-label">Algo Bot</span></a></li>
+        <li><a href="#" class="nav-item" data-page="trades"><span class="nav-icon">&#x1F4CB;</span><span class="nav-label">Trade History</span></a></li>
+        <li><a href="#" class="nav-item" data-page="announcements"><span class="nav-icon">&#x1F4E2;</span><span class="nav-label">Announcements</span></a></li>
+        <li><a href="#" class="nav-item" data-page="account"><span class="nav-icon">&#x1F464;</span><span class="nav-label">Account</span></a></li>
+        <li><a href="#" class="nav-item" data-page="settings"><span class="nav-icon">&#x2699;&#xFE0F;</span><span class="nav-label">Settings</span></a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- MAIN WRAPPER -->
+  <div class="main-wrapper" id="mainWrapper">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle-mobile" id="mobileSidebarToggle" aria-label="Open menu">&#9776;</button>
+        <nav aria-label="Breadcrumb" class="breadcrumb" id="breadcrumb"><span>Dashboard</span></nav>
+      </div>
+      <div class="topbar-center">
+        <div class="market-ticker" id="marketTicker" aria-live="polite">
+          <span class="ticker-item"><strong>SENSEX</strong> <span id="sensex-val" class="ticker-val">--</span></span>
+          <span class="ticker-divider">|</span>
+          <span class="ticker-item"><strong>NIFTY 50</strong> <span id="nifty-val" class="ticker-val">--</span></span>
+          <span class="ticker-divider">|</span>
+          <span class="ticker-item"><strong>NIFTY BANK</strong> <span id="banknifty-val" class="ticker-val">--</span></span>
+          <span class="ticker-divider">|</span>
+          <span class="ticker-item"><strong>India VIX</strong> <span id="vix-val" class="ticker-val">--</span></span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="account-summary">
+          <span class="summary-item">Balance: <strong id="topbar-balance">&#x20B9;0.00</strong></span>
+          <span class="summary-item today-pnl" id="topbar-pnl-span">P&amp;L: <strong id="topbar-pnl">&#x20B9;0.00</strong></span>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="showModal('depositModal')">+ Funds</button>
+        <button class="notification-bell" id="notifBtn" aria-label="Notifications" onclick="toggleNotifPanel()">
+          &#x1F514;<span class="notif-badge" id="notifBadge" style="display:none">0</span>
+        </button>
+      </div>
+    </header>
+    <!-- Notification panel -->
+    <div id="notifPanel" class="notif-panel hidden">
+      <div class="notif-panel-header"><strong>Notifications</strong><button onclick="clearNotifications()">Clear all</button></div>
+      <div id="notifList"><p class="empty-state">No new notifications.</p></div>
+    </div>
+
+    <!-- PAGES -->
+    <main class="content-area" id="contentArea">
+
+      <!-- DASHBOARD PAGE -->
+      <section id="page-dashboard" class="page active" aria-labelledby="dashboard-title">
+        <h1 id="dashboard-title" class="page-title">Dashboard</h1>
+        <div class="stats-grid">
+          <div class="stat-card" tabindex="0" title="Cash available for trading">
+            <div class="stat-icon">&#x1F4B0;</div>
+            <div class="stat-info"><div class="stat-label">Cash Available</div><div class="stat-value" id="stat-cash">&#x20B9;0.00</div></div>
+          </div>
+          <div class="stat-card" tabindex="0" title="Total capital deployed in open positions">
+            <div class="stat-icon">&#x1F4C8;</div>
+            <div class="stat-info"><div class="stat-label">Invested Capital</div><div class="stat-value" id="stat-invested">&#x20B9;0.00</div></div>
+          </div>
+          <div class="stat-card" tabindex="0" title="Unrealised profit and loss on open positions">
+            <div class="stat-icon">&#x1F7E2;</div>
+            <div class="stat-info"><div class="stat-label">Unrealised P&amp;L</div><div class="stat-value" id="stat-unrealised">&#x20B9;0.00</div></div>
+          </div>
+          <div class="stat-card" tabindex="0" title="Profit and loss on closed trades">
+            <div class="stat-icon">&#x2705;</div>
+            <div class="stat-info"><div class="stat-label">Realised P&amp;L</div><div class="stat-value" id="stat-realised">&#x20B9;0.00</div></div>
+          </div>
+          <div class="stat-card" tabindex="0" title="Margin/leverage currently utilised">
+            <div class="stat-icon">&#x26A1;</div>
+            <div class="stat-info"><div class="stat-label">Margin Used</div><div class="stat-value" id="stat-margin">&#x20B9;0.00</div></div>
+          </div>
+          <div class="stat-card" tabindex="0" title="Total portfolio value (cash + investments)">
+            <div class="stat-icon">&#x1F4CA;</div>
+            <div class="stat-info"><div class="stat-label">Total Portfolio</div><div class="stat-value" id="stat-total">&#x20B9;0.00</div></div>
+          </div>
+        </div>
+        <div class="charts-row">
+          <div class="card chart-card">
+            <div class="card-header"><h3>Portfolio Performance</h3>
+              <div class="chart-controls">
+                <button class="btn btn-xs" onclick="updatePerfChart('1D')" id="perf-1D">1D</button>
+                <button class="btn btn-xs btn-active" onclick="updatePerfChart('1W')" id="perf-1W">1W</button>
+                <button class="btn btn-xs" onclick="updatePerfChart('1M')" id="perf-1M">1M</button>
+                <button class="btn btn-xs" onclick="updatePerfChart('3M')" id="perf-3M">3M</button>
+              </div>
+            </div>
+            <div class="chart-container"><canvas id="perfChart"></canvas></div>
+          </div>
+          <div class="card chart-card">
+            <div class="card-header"><h3>Sector Allocation</h3></div>
+            <div class="chart-container"><canvas id="sectorChart"></canvas></div>
+          </div>
+        </div>
+        <div class="cards-row">
+          <div class="card">
+            <div class="card-header"><h3>Active Strategies</h3><span class="badge badge-green" id="bot-status-badge">Stopped</span></div>
+            <div id="active-strategies-list" class="strategy-list-mini">
+              <p class="empty-state">No strategies running. <a href="#" onclick="navigateTo('algobot')">Configure Algo Bot</a></p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Recent Trades</h3><a href="#" onclick="navigateTo('trades')" class="link-sm">View All</a></div>
+            <div id="recent-trades-mini" class="trades-mini"><p class="empty-state">No trades yet.</p></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Watchlist</h3><button class="btn btn-xs" onclick="showModal('addWatchModal')">+ Add</button></div>
+            <div id="watchlist-container"><p class="empty-state">Add stocks to watch.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PORTFOLIO PAGE -->
+      <section id="page-portfolio" class="page" aria-labelledby="portfolio-title">
+        <h1 id="portfolio-title" class="page-title">Portfolio</h1>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">&#x1F4BC;</div><div class="stat-info"><div class="stat-label">Holdings Value</div><div class="stat-value" id="port-holdings">&#x20B9;0.00</div></div></div>
+          <div class="stat-card"><div class="stat-icon">&#x1F4C9;</div><div class="stat-info"><div class="stat-label">Day Change</div><div class="stat-value" id="port-daychange">&#x20B9;0.00 (0.00%)</div></div></div>
+          <div class="stat-card"><div class="stat-icon">&#x1F3AF;</div><div class="stat-info"><div class="stat-label">Overall Return</div><div class="stat-value" id="port-return">0.00%</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Holdings</h3>
+            <div class="table-controls">
+              <input type="text" id="holdingsSearch" placeholder="Search holdings..." class="input-sm" oninput="filterHoldings()">
+              <button class="btn btn-sm btn-primary" onclick="showModal('buyModal')">Buy / Sell</button>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table" id="holdingsTable" aria-label="Holdings">
+              <thead><tr>
+                <th onclick="sortTable('holdingsTable',0)">Symbol &#x2195;</th>
+                <th onclick="sortTable('holdingsTable',1)">Company &#x2195;</th>
+                <th onclick="sortTable('holdingsTable',2)">Qty &#x2195;</th>
+                <th onclick="sortTable('holdingsTable',3)">Avg Price &#x2195;</th>
+                <th onclick="sortTable('holdingsTable',4)">LTP &#x2195;</th>
+                <th onclick="sortTable('holdingsTable',5)">P&amp;L &#x2195;</th>
+                <th onclick="sortTable('holdingsTable',6)">P&amp;L% &#x2195;</th>
+                <th>Actions</th>
+              </tr></thead>
+              <tbody id="holdingsBody"><tr><td colspan="8" class="empty-state">No holdings. Buy stocks to build your portfolio.</td></tr></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="holdingsPagination"></div>
+        </div>
+        <div class="charts-row">
+          <div class="card chart-card"><div class="card-header"><h3>Portfolio Composition</h3></div><div class="chart-container"><canvas id="portfolioCompositionChart"></canvas></div></div>
+          <div class="card chart-card"><div class="card-header"><h3>P&amp;L Over Time</h3></div><div class="chart-container"><canvas id="pnlChart"></canvas></div></div>
+        </div>
+      </section>
+
+      <!-- LIVE MARKET PAGE -->
+      <section id="page-market" class="page" aria-labelledby="market-title">
+        <h1 id="market-title" class="page-title">Live Market</h1>
+        <div class="market-status-bar">
+          <span id="market-status-text" class="badge badge-green">&#x1F7E2; Market Open</span>
+          <span class="last-updated" id="last-updated-time">Last updated: --</span>
+          <span class="ws-status">&#x26A1; Feed: <span id="ws-conn-status">Simulated</span></span>
+        </div>
+        <div class="stats-grid indices-grid">
+          <div class="stat-card index-card"><div class="stat-icon">&#x1F4CA;</div><div class="stat-info"><div class="stat-label">SENSEX</div><div class="stat-value" id="idx-sensex-val">--</div><div class="stat-change" id="idx-sensex-chg">--</div></div></div>
+          <div class="stat-card index-card"><div class="stat-icon">&#x1F4C8;</div><div class="stat-info"><div class="stat-label">NIFTY 50</div><div class="stat-value" id="idx-nifty-val">--</div><div class="stat-change" id="idx-nifty-chg">--</div></div></div>
+          <div class="stat-card index-card"><div class="stat-icon">&#x1F3E6;</div><div class="stat-info"><div class="stat-label">NIFTY BANK</div><div class="stat-value" id="idx-banknifty-val">--</div><div class="stat-change" id="idx-banknifty-chg">--</div></div></div>
+          <div class="stat-card index-card"><div class="stat-icon">&#x26A1;</div><div class="stat-info"><div class="stat-label">India VIX</div><div class="stat-value" id="idx-vix-val">--</div><div class="stat-change" id="idx-vix-chg">--</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Stock Screener</h3>
+            <div class="table-controls">
+              <input type="text" id="stockSearch" placeholder="Search stocks..." class="input-sm" oninput="filterMarketTable()">
+              <select id="sectorFilter" class="select-sm" onchange="filterMarketTable()">
+                <option value="">All Sectors</option>
+                <option value="IT">IT</option>
+                <option value="Banking">Banking</option>
+                <option value="Energy">Energy</option>
+                <option value="Auto">Auto</option>
+                <option value="Pharma">Pharma</option>
+                <option value="FMCG">FMCG</option>
+                <option value="Metal">Metal</option>
+                <option value="Finance">Finance</option>
+              </select>
+              <select id="exchangeFilter" class="select-sm" onchange="filterMarketTable()">
+                <option value="">NSE+BSE</option>
+                <option value="NSE">NSE</option>
+                <option value="BSE">BSE</option>
+              </select>
+              <button class="btn btn-sm btn-primary" onclick="showModal('buyModal')">Trade</button>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table" id="marketTable" aria-label="Market data">
+              <thead><tr>
+                <th onclick="sortTable('marketTable',0)">Symbol &#x2195;</th>
+                <th onclick="sortTable('marketTable',1)">Company &#x2195;</th>
+                <th>Exchange</th><th>Sector</th>
+                <th onclick="sortTable('marketTable',4)">LTP &#x2195;</th>
+                <th onclick="sortTable('marketTable',5)">Change &#x2195;</th>
+                <th onclick="sortTable('marketTable',6)">Chg% &#x2195;</th>
+                <th onclick="sortTable('marketTable',7)">Volume &#x2195;</th>
+                <th onclick="sortTable('marketTable',8)">52W High &#x2195;</th>
+                <th onclick="sortTable('marketTable',9)">52W Low &#x2195;</th>
+                <th>Actions</th>
+              </tr></thead>
+              <tbody id="marketBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="marketPagination"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>&#x1F4C5; IPO Tracker</h3></div>
+          <div id="ipoTracker" class="ipo-grid"></div>
+        </div>
+      </section>
+
+      <!-- ALGO BOT PAGE -->
+      <section id="page-algobot" class="page" aria-labelledby="algobot-title">
+        <h1 id="algobot-title" class="page-title">Algo Bot</h1>
+        <div class="bot-control-bar">
+          <div class="bot-status-display">
+            <span class="dot stopped" id="botDot"></span>
+            <span id="botStatusText">Bot Stopped</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-success" id="startBotBtn" onclick="startBot()">&#x25B6; Start Bot</button>
+            <button class="btn btn-danger" id="stopBotBtn" onclick="stopBot()" disabled>&#x23F9; Stop Bot</button>
+            <button class="btn btn-warning" onclick="showModal('backtestModal')">&#x1F4CA; Backtest</button>
+            <button class="btn btn-secondary" onclick="exportBotReport()">&#x1F4E5; Export</button>
+          </div>
+        </div>
+        <div class="bot-grid">
+          <div class="card bot-card">
+            <div class="card-header"><h3>Trading Strategies</h3><span class="badge badge-blue" id="selectedStratCount">0 selected</span></div>
+            <div class="strategy-list" id="strategyList">
+              <label class="strategy-item" title="Detect price momentum and volume spikes">
+                <input type="checkbox" name="strategy" value="momentum" onchange="updateStratCount()">
+                <div class="strategy-info"><strong>&#x1F680; Momentum Trading</strong><p>Price momentum + volume spike detection</p></div>
+              </label>
+              <label class="strategy-item" title="Trade deviation from 20/50-day MA">
+                <input type="checkbox" name="strategy" value="mean_reversion" onchange="updateStratCount()">
+                <div class="strategy-info"><strong>&#x1F504; Mean Reversion</strong><p>Buy/sell on deviation from moving averages</p></div>
+              </label>
+              <label class="strategy-item" title="Auto-trade on earnings beats greater than 5%">
+                <input type="checkbox" name="strategy" value="earnings_surprise" onchange="updateStratCount()">
+                <div class="strategy-info"><strong>&#x1F4A1; Earnings Surprise Play</strong><p>Auto-trade on &gt;5% earnings beat</p></div>
+              </label>
+              <label class="strategy-item" title="Trade pre/post dividend announcements">
+                <input type="checkbox" name="strategy" value="corporate_action" onchange="updateStratCount()">
+                <div class="strategy-info"><strong>&#x1F4C5; Corporate Action Trigger</strong><p>Dividend &amp; announcement-based trading</p></div>
+              </label>
+              <label class="strategy-item" title="NLP-based sentiment analysis on news">
+                <input type="checkbox" name="strategy" value="news_sentiment" onchange="updateStratCount()">
+                <div class="strategy-info"><strong>&#x1F4F0; News Sentiment Analysis</strong><p>NLP buy/sell on positive/negative news</p></div>
+              </label>
+              <label class="strategy-item" title="Trade breakouts from key technical levels">
+                <input type="checkbox" name="strategy" value="breakout" onchange="updateStratCount()">
+                <div class="strategy-info"><strong>&#x1F4D0; Support/Resistance Breakout</strong><p>Technical level breakout trading</p></div>
+              </label>
+              <label class="strategy-item" title="Trade using volume-weighted average price">
+                <input type="checkbox" name="strategy" value="vwap" onchange="updateStratCount()">
+                <div class="strategy-info"><strong>&#x1F4C9; VWAP Following</strong><p>Volume-weighted average price tracking</p></div>
+              </label>
+              <label class="strategy-item" title="Long/short pairs of correlated stocks">
+                <input type="checkbox" name="strategy" value="pairs" onchange="updateStratCount()">
+                <div class="strategy-info"><strong>&#x1F517; Pairs Trading</strong><p>Long/short correlated stock pairs</p></div>
+              </label>
+              <label class="strategy-item" title="AI model selects optimal strategy using live data">
+                <input type="checkbox" name="strategy" value="ai_decision" onchange="updateStratCount()">
+                <div class="strategy-info"><strong>&#x1F9E0; AI-Decided Strategy</strong><p>ML model selects strategy on live data &amp; news</p></div>
+              </label>
+            </div>
+          </div>
+
+          <div class="card bot-card">
+            <div class="card-header"><h3>Trade Configuration</h3></div>
+            <div class="form-group">
+              <label class="form-label" for="tradeMode">Trade Mode</label>
+              <select id="tradeMode" class="form-control" onchange="updateTradeMode()">
+                <option value="paper">Paper Trading (Simulation)</option>
+                <option value="live">Live Trading (Real Money)</option>
+              </select>
+            </div>
+            <div id="liveModeWarning" class="alert alert-warning hidden">
+              &#x26A0;&#xFE0F; Live trading uses real funds. Ensure API keys are configured.
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="capitalAllocation">Capital Allocation (&#x20B9;)</label>
+              <input type="number" id="capitalAllocation" class="form-control" value="100000" min="1000" step="1000">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="maxPositions">Max Open Positions</label>
+              <input type="number" id="maxPositions" class="form-control" value="5" min="1" max="50">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="orderType">Default Order Type</label>
+              <select id="orderType" class="form-control">
+                <option value="MARKET">Market Order</option>
+                <option value="LIMIT">Limit Order</option>
+                <option value="SL">Stop-Loss Order</option>
+                <option value="SL-M">SL-Market Order</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Trading Hours</label>
+              <div class="input-row">
+                <input type="time" id="tradeStart" class="form-control" value="09:15">
+                <span class="input-sep">to</span>
+                <input type="time" id="tradeEnd" class="form-control" value="15:30">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="stockUniverse">Stock Universe</label>
+              <select id="stockUniverse" class="form-control" onchange="toggleCustomStocks()">
+                <option value="nifty50">NIFTY 50</option>
+                <option value="nifty100">NIFTY 100</option>
+                <option value="nifty200">NIFTY 200</option>
+                <option value="custom">Custom List</option>
+              </select>
+            </div>
+            <div id="customStocksGroup" class="form-group hidden">
+              <label class="form-label" for="customStocks">Custom Symbols (comma-separated)</label>
+              <textarea id="customStocks" class="form-control" rows="3" placeholder="RELIANCE,TCS,INFY,HDFC..."></textarea>
+            </div>
+          </div>
+
+          <div class="card bot-card">
+            <div class="card-header"><h3>Risk Management</h3></div>
+            <div class="form-group">
+              <label class="form-label" for="slType">Stop-Loss Type</label>
+              <select id="slType" class="form-control" onchange="toggleSlOptions()">
+                <option value="fixed">Fixed % Stop-Loss</option>
+                <option value="atr">Dynamic (ATR-Based)</option>
+                <option value="trailing">Trailing Stop-Loss</option>
+              </select>
+            </div>
+            <div class="form-group" id="fixedSlGroup">
+              <label class="form-label" for="fixedSl">Stop-Loss %</label>
+              <input type="number" id="fixedSl" class="form-control" value="2" min="0.1" max="20" step="0.1">
+            </div>
+            <div class="form-group hidden" id="atrSlGroup">
+              <label class="form-label" for="atrMultiplier">ATR Multiplier</label>
+              <input type="number" id="atrMultiplier" class="form-control" value="2.0" min="0.5" max="5" step="0.1">
+            </div>
+            <div class="form-group hidden" id="trailSlGroup">
+              <label class="form-label" for="trailPct">Trailing Stop %</label>
+              <input type="number" id="trailPct" class="form-control" value="1.5" min="0.1" max="10" step="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="takeProfit">Take Profit %</label>
+              <input type="number" id="takeProfit" class="form-control" value="5" min="0.1" step="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="positionSizing">Position Sizing</label>
+              <select id="positionSizing" class="form-control">
+                <option value="fixed_pct">Fixed % of Capital</option>
+                <option value="kelly">Kelly Criterion</option>
+                <option value="equal">Equal Weight</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="positionSize">Position Size (% of capital)</label>
+              <input type="number" id="positionSize" class="form-control" value="10" min="1" max="100" step="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="maxPortfolioHeat">Max Portfolio Heat %</label>
+              <input type="number" id="maxPortfolioHeat" class="form-control" value="20" min="1" max="100" step="1">
+              <span class="helper-text">Max % of capital at risk simultaneously</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="maxDailyLoss">Max Daily Loss (&#x20B9;)</label>
+              <input type="number" id="maxDailyLoss" class="form-control" value="5000" min="100" step="100">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="maxHoldTime">Max Hold Time (hours, 0=unlimited)</label>
+              <input type="number" id="maxHoldTime" class="form-control" value="24" min="0" step="0.5">
+            </div>
+          </div>
+
+          <div class="card bot-card">
+            <div class="card-header"><h3>API Integration</h3></div>
+            <div class="form-group">
+              <label class="form-label" for="zerodhaApiKey">Zerodha API Key</label>
+              <input type="password" id="zerodhaApiKey" class="form-control" placeholder="Enter Zerodha API key" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="zerodhaSecret">Zerodha API Secret</label>
+              <input type="password" id="zerodhaSecret" class="form-control" placeholder="Enter API secret" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="accessToken">Access Token</label>
+              <input type="text" id="accessToken" class="form-control" placeholder="Login to generate token" autocomplete="off">
+            </div>
+            <button class="btn btn-primary" onclick="testZerodhaConnection()">&#x1F50C; Test Connection</button>
+            <div id="zerodhaConnStatus" class="helper-text" style="margin-top:8px"></div>
+            <div class="form-group" style="margin-top:16px">
+              <label class="form-label" for="supabaseUrl">Supabase URL</label>
+              <input type="text" id="supabaseUrl" class="form-control" placeholder="https://xxx.supabase.co">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="supabaseKey">Supabase Anon Key</label>
+              <input type="password" id="supabaseKey" class="form-control" placeholder="Enter Supabase anon key" autocomplete="off">
+            </div>
+            <button class="btn btn-secondary" onclick="saveApiConfig()">&#x1F4BE; Save Configuration</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Strategy Performance Metrics</h3></div>
+          <div class="stats-grid perf-grid">
+            <div class="stat-card small"><div class="stat-info"><div class="stat-label">Sharpe Ratio</div><div class="stat-value" id="sharpeRatio">--</div></div></div>
+            <div class="stat-card small"><div class="stat-info"><div class="stat-label">Win Rate</div><div class="stat-value" id="winRate">--</div></div></div>
+            <div class="stat-card small"><div class="stat-info"><div class="stat-label">Max Drawdown</div><div class="stat-value" id="maxDrawdown">--</div></div></div>
+            <div class="stat-card small"><div class="stat-info"><div class="stat-label">Total Bot Trades</div><div class="stat-value" id="totalBotTrades">0</div></div></div>
+            <div class="stat-card small"><div class="stat-info"><div class="stat-label">Bot P&amp;L Today</div><div class="stat-value" id="botPnlToday">&#x20B9;0.00</div></div></div>
+            <div class="stat-card small"><div class="stat-info"><div class="stat-label">Avg Trade Duration</div><div class="stat-value" id="avgTradeDuration">--</div></div></div>
+          </div>
+          <div class="chart-container" style="height:200px;margin-top:16px"><canvas id="botPerfChart"></canvas></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>Active Bot Positions</h3></div>
+          <div class="table-wrapper">
+            <table class="data-table" id="botTradesTable" aria-label="Bot active positions">
+              <thead><tr>
+                <th>Strategy</th><th>Symbol</th><th>Type</th><th>Entry</th>
+                <th>LTP</th><th>P&amp;L</th><th>SL</th><th>TP</th><th>Duration</th><th>Action</th>
+              </tr></thead>
+              <tbody id="botTradesBody"><tr><td colspan="10" class="empty-state">Bot is not running.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRADE HISTORY PAGE -->
+      <section id="page-trades" class="page" aria-labelledby="trades-title">
+        <h1 id="trades-title" class="page-title">Trade History</h1>
+        <div class="tab-bar" role="tablist">
+          <button class="tab active" role="tab" aria-selected="true" onclick="switchTradeTab('my')">My Trades</button>
+          <button class="tab" role="tab" aria-selected="false" onclick="switchTradeTab('bot')">Bot Trades</button>
+          <button class="tab" role="tab" aria-selected="false" onclick="switchTradeTab('all')">All Trades</button>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3 id="trades-tab-title">My Trades</h3>
+            <div class="table-controls">
+              <input type="date" id="tradeFromDate" class="input-sm" onchange="filterTrades()">
+              <input type="date" id="tradeToDate" class="input-sm" onchange="filterTrades()">
+              <select id="tradeTypeFilter" class="select-sm" onchange="filterTrades()">
+                <option value="">All Types</option>
+                <option value="BUY">Buy</option>
+                <option value="SELL">Sell</option>
+              </select>
+              <input type="text" id="tradeSearch" class="input-sm" placeholder="Search symbol..." oninput="filterTrades()">
+              <button class="btn btn-sm btn-secondary" onclick="exportTrades()">&#x1F4E5; Export CSV</button>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table" id="tradesTable" aria-label="Trade history">
+              <thead><tr>
+                <th onclick="sortTable('tradesTable',0)">Date &#x2195;</th>
+                <th onclick="sortTable('tradesTable',1)">Symbol &#x2195;</th>
+                <th>Exchange</th>
+                <th onclick="sortTable('tradesTable',3)">Type &#x2195;</th>
+                <th onclick="sortTable('tradesTable',4)">Qty &#x2195;</th>
+                <th onclick="sortTable('tradesTable',5)">Price &#x2195;</th>
+                <th onclick="sortTable('tradesTable',6)">Total &#x2195;</th>
+                <th>P&amp;L</th>
+                <th>Source</th>
+                <th>Status</th>
+              </tr></thead>
+              <tbody id="tradesBody"><tr><td colspan="10" class="empty-state">No trades recorded yet.</td></tr></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="tradesPagination"></div>
+        </div>
+        <div class="charts-row">
+          <div class="card chart-card"><div class="card-header"><h3>Trade P&amp;L Breakdown</h3></div><div class="chart-container"><canvas id="tradePnlChart"></canvas></div></div>
+          <div class="card chart-card"><div class="card-header"><h3>Win/Loss Ratio</h3></div><div class="chart-container"><canvas id="winLossChart"></canvas></div></div>
+        </div>
+      </section>
+
+      <!-- ANNOUNCEMENTS PAGE -->
+      <section id="page-announcements" class="page" aria-labelledby="announcements-title">
+        <h1 id="announcements-title" class="page-title">Announcements &amp; News</h1>
+        <div class="tab-bar" role="tablist">
+          <button class="tab active" role="tab" onclick="switchAnnTab('announcements')">Corporate Announcements</button>
+          <button class="tab" role="tab" onclick="switchAnnTab('earnings')">Quarterly Earnings</button>
+          <button class="tab" role="tab" onclick="switchAnnTab('dividends')">Dividend Calendar</button>
+          <button class="tab" role="tab" onclick="switchAnnTab('economic')">Economic Calendar</button>
+        </div>
+        <div id="ann-tab-announcements" class="ann-tab-content active">
+          <div class="card">
+            <div class="card-header">
+              <h3>BSE/NSE Corporate Announcements</h3>
+              <div class="table-controls">
+                <input type="text" id="annSearch" class="input-sm" placeholder="Search company..." oninput="filterAnnouncements()">
+                <select id="annTypeFilter" class="select-sm" onchange="filterAnnouncements()">
+                  <option value="">All Types</option>
+                  <option value="Results">Quarterly Results</option>
+                  <option value="Dividend">Dividend</option>
+                  <option value="Board Meeting">Board Meeting</option>
+                  <option value="AGM">AGM</option>
+                  <option value="Rights Issue">Rights Issue</option>
+                  <option value="Buyback">Buyback</option>
+                </select>
+                <button class="btn btn-sm btn-primary" onclick="refreshAnnouncements()">&#x1F504; Refresh</button>
+              </div>
+            </div>
+            <div id="announcementsList"></div>
+          </div>
+        </div>
+        <div id="ann-tab-earnings" class="ann-tab-content hidden">
+          <div class="card"><div class="card-header"><h3>Quarterly Results</h3></div><div id="earningsList"></div></div>
+        </div>
+        <div id="ann-tab-dividends" class="ann-tab-content hidden">
+          <div class="card"><div class="card-header"><h3>Dividend Calendar</h3></div><div id="dividendCalendar"></div></div>
+        </div>
+        <div id="ann-tab-economic" class="ann-tab-content hidden">
+          <div class="card"><div class="card-header"><h3>Economic Calendar</h3></div><div id="economicCalendar"></div></div>
+        </div>
+      </section>
+
+      <!-- ACCOUNT PAGE -->
+      <section id="page-account" class="page" aria-labelledby="account-title">
+        <h1 id="account-title" class="page-title">Account</h1>
+        <div class="cards-row">
+          <div class="card">
+            <div class="card-header"><h3>Account Summary</h3></div>
+            <div class="account-detail-grid">
+              <div class="account-row"><span>Account Type</span><strong id="acc-type">Paper Trading</strong></div>
+              <div class="account-row"><span>Account ID</span><span id="acc-id">FINO-PAPER-001</span></div>
+              <div class="account-row"><span>Cash Balance</span><strong id="acc-cash">&#x20B9;0.00</strong></div>
+              <div class="account-row"><span>Invested Capital</span><strong id="acc-invested">&#x20B9;0.00</strong></div>
+              <div class="account-row"><span>Portfolio Value</span><strong id="acc-portfolio">&#x20B9;0.00</strong></div>
+              <div class="account-row"><span>Total Deposits</span><span id="acc-deposits">&#x20B9;0.00</span></div>
+              <div class="account-row"><span>Total Withdrawals</span><span id="acc-withdrawals">&#x20B9;0.00</span></div>
+              <div class="account-row"><span>Realised P&amp;L</span><strong id="acc-realised">&#x20B9;0.00</strong></div>
+              <div class="account-row"><span>Unrealised P&amp;L</span><strong id="acc-unrealised">&#x20B9;0.00</strong></div>
+              <div class="account-row"><span>Margin Used</span><span id="acc-margin">&#x20B9;0.00</span></div>
+            </div>
+            <div class="btn-row" style="margin-top:16px">
+              <button class="btn btn-primary" onclick="showModal('depositModal')">&#x1F4B0; Deposit</button>
+              <button class="btn btn-danger" onclick="showModal('withdrawModal')">&#x1F4E4; Withdraw</button>
+              <button class="btn btn-warning" onclick="showModal('resetBalanceModal')">&#x1F504; Reset</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Profile Settings</h3></div>
+            <div class="form-group">
+              <label class="form-label" for="accName">Full Name</label>
+              <input type="text" id="accName" class="form-control" placeholder="Your name" value="Trader">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="accEmail">Email</label>
+              <input type="email" id="accEmail" class="form-control" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="accPan">PAN Number</label>
+              <input type="text" id="accPan" class="form-control" placeholder="ABCDE1234F" maxlength="10">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="accTypeSelect">Account Mode</label>
+              <select id="accTypeSelect" class="form-control" onchange="switchAccountType()">
+                <option value="paper">Paper Trading</option>
+                <option value="live">Live Trading</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="saveAccountSettings()">&#x1F4BE; Save Settings</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Transaction History</h3>
+            <button class="btn btn-sm btn-secondary" onclick="exportTransactions()">&#x1F4E5; Export CSV</button>
+          </div>
+          <div class="table-wrapper">
+            <table class="data-table" id="transactionTable" aria-label="Transactions">
+              <thead><tr>
+                <th>Date</th><th>Type</th><th>Amount</th><th>Balance After</th><th>Note</th>
+              </tr></thead>
+              <tbody id="transactionBody"><tr><td colspan="5" class="empty-state">No transactions yet.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS PAGE -->
+      <section id="page-settings" class="page" aria-labelledby="settings-title">
+        <h1 id="settings-title" class="page-title">Settings</h1>
+        <div class="cards-row">
+          <div class="card">
+            <div class="card-header"><h3>Display</h3></div>
+            <div class="form-group">
+              <label class="form-label">Theme</label>
+              <div class="toggle-group">
+                <button class="btn btn-sm btn-active" onclick="setTheme('dark')" id="theme-dark">Dark</button>
+                <button class="btn btn-sm" onclick="setTheme('light')" id="theme-light">Light</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="refreshInterval">Data Refresh (seconds)</label>
+              <input type="number" id="refreshInterval" class="form-control" value="5" min="2" max="60">
+            </div>
+            <button class="btn btn-primary" onclick="saveDisplaySettings()">Save</button>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Notifications</h3></div>
+            <div class="toggle-item"><span>Price Alerts</span><label class="toggle-switch"><input type="checkbox" id="notifPriceAlerts" checked><span class="toggle-slider"></span></label></div>
+            <div class="toggle-item"><span>Corporate Announcements</span><label class="toggle-switch"><input type="checkbox" id="notifAnnouncements" checked><span class="toggle-slider"></span></label></div>
+            <div class="toggle-item"><span>Bot Trade Alerts</span><label class="toggle-switch"><input type="checkbox" id="notifBotTrades" checked><span class="toggle-slider"></span></label></div>
+            <div class="toggle-item"><span>Daily P&amp;L Summary</span><label class="toggle-switch"><input type="checkbox" id="notifDailyPnl" checked><span class="toggle-slider"></span></label></div>
+            <div class="toggle-item"><span>Stop-Loss Triggered</span><label class="toggle-switch"><input type="checkbox" id="notifSlTriggered" checked><span class="toggle-slider"></span></label></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Data &amp; Privacy</h3></div>
+          <div class="btn-row">
+            <button class="btn btn-secondary" onclick="exportAllData()">&#x1F4E5; Export All Data</button>
+            <button class="btn btn-danger" onclick="showModal('clearDataModal')">&#x1F5D1;&#xFE0F; Clear All Data</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div><!-- end .main-wrapper -->
+
+  <!-- MODALS -->
+
+  <!-- Buy/Sell Modal -->
+  <div id="buyModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="buyModal-title">
+    <div class="modal-overlay" onclick="closeModal('buyModal')"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="buyModal-title">Buy / Sell Stock</h3>
+        <button class="modal-close" onclick="closeModal('buyModal')" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="tradeSymbol">Stock Symbol</label>
+          <input type="text" id="tradeSymbol" class="form-control" placeholder="e.g. RELIANCE" oninput="fetchTradeQuote(this.value)" style="text-transform:uppercase">
+          <div id="tradeQuoteInfo" class="helper-text"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="tradeAction">Action</label>
+          <select id="tradeAction" class="form-control">
+            <option value="BUY">BUY</option>
+            <option value="SELL">SELL</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="tradeQty">Quantity</label>
+          <input type="number" id="tradeQty" class="form-control" value="1" min="1" oninput="updateTradeTotal()">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="tradePrice">Price (&#x20B9;)</label>
+          <input type="number" id="tradePrice" class="form-control" step="0.05" min="0.01" oninput="updateTradeTotal()">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="tradeOrderType">Order Type</label>
+          <select id="tradeOrderType" class="form-control">
+            <option value="MARKET">Market</option>
+            <option value="LIMIT">Limit</option>
+          </select>
+        </div>
+        <div class="trade-total-bar">
+          Total: <strong id="tradeTotalDisplay">&#x20B9;0.00</strong>
+          <span class="avail-bal-text">Available: <span id="tradeAvailBal">&#x20B9;0.00</span></span>
+        </div>
+        <div id="tradeError" class="alert alert-danger hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('buyModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="executeTrade()">Confirm Trade</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deposit Modal -->
+  <div id="depositModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="depositModal-title">
+    <div class="modal-overlay" onclick="closeModal('depositModal')"></div>
+    <div class="modal-box small">
+      <div class="modal-header">
+        <h3 id="depositModal-title">Add Funds</h3>
+        <button class="modal-close" onclick="closeModal('depositModal')" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="depositAmt">Amount (&#x20B9;)</label>
+          <input type="number" id="depositAmt" class="form-control" value="100000" min="100" step="1000">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="depositNote">Note (optional)</label>
+          <input type="text" id="depositNote" class="form-control" placeholder="Initial deposit">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('depositModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="processDeposit()">Add Funds</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Withdraw Modal -->
+  <div id="withdrawModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="withdrawModal-title">
+    <div class="modal-overlay" onclick="closeModal('withdrawModal')"></div>
+    <div class="modal-box small">
+      <div class="modal-header">
+        <h3 id="withdrawModal-title">Withdraw Funds</h3>
+        <button class="modal-close" onclick="closeModal('withdrawModal')" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="withdrawAmt">Amount (&#x20B9;)</label>
+          <input type="number" id="withdrawAmt" class="form-control" value="10000" min="100" step="1000">
+          <span class="helper-text">Available cash: <span id="withdrawAvail">&#x20B9;0.00</span></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="withdrawNote">Note (optional)</label>
+          <input type="text" id="withdrawNote" class="form-control" placeholder="Withdrawal reason">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('withdrawModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="processWithdrawal()">Withdraw</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Balance Modal -->
+  <div id="resetBalanceModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="resetBalanceModal-title">
+    <div class="modal-overlay" onclick="closeModal('resetBalanceModal')"></div>
+    <div class="modal-box small">
+      <div class="modal-header">
+        <h3 id="resetBalanceModal-title">Reset Balance</h3>
+        <button class="modal-close" onclick="closeModal('resetBalanceModal')" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">&#x26A0;&#xFE0F; This will clear all holdings, trades, and reset the balance. Cannot be undone.</div>
+        <div class="form-group">
+          <label class="form-label" for="resetAmt">Starting Balance (&#x20B9;) &mdash; enter 0 for fresh start</label>
+          <input type="number" id="resetAmt" class="form-control" value="0" min="0" step="1000">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('resetBalanceModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="resetBalance()">Confirm Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Watchlist Modal -->
+  <div id="addWatchModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="addWatchModal-title">
+    <div class="modal-overlay" onclick="closeModal('addWatchModal')"></div>
+    <div class="modal-box small">
+      <div class="modal-header">
+        <h3 id="addWatchModal-title">Add to Watchlist</h3>
+        <button class="modal-close" onclick="closeModal('addWatchModal')" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="watchSymbol">Stock Symbol</label>
+          <input type="text" id="watchSymbol" class="form-control" placeholder="e.g. TATAMOTORS" style="text-transform:uppercase">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('addWatchModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addToWatchlist()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backtest Modal -->
+  <div id="backtestModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="backtestModal-title">
+    <div class="modal-overlay" onclick="closeModal('backtestModal')"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="backtestModal-title">Strategy Backtest</h3>
+        <button class="modal-close" onclick="closeModal('backtestModal')" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="btStrategy">Strategy</label>
+          <select id="btStrategy" class="form-control">
+            <option value="momentum">Momentum Trading</option>
+            <option value="mean_reversion">Mean Reversion</option>
+            <option value="breakout">Support/Resistance Breakout</option>
+            <option value="vwap">VWAP Following</option>
+          </select>
+        </div>
+        <div class="input-row">
+          <div class="form-group" style="flex:1">
+            <label class="form-label" for="btFrom">From</label>
+            <input type="date" id="btFrom" class="form-control" value="2024-01-01">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label" for="btTo">To</label>
+            <input type="date" id="btTo" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="btCapital">Initial Capital (&#x20B9;)</label>
+          <input type="number" id="btCapital" class="form-control" value="100000">
+        </div>
+        <div id="backtestResults" class="backtest-results hidden">
+          <h4>Backtest Results</h4>
+          <div class="stats-grid perf-grid" id="backtestStats"></div>
+          <div class="chart-container" style="height:200px"><canvas id="backtestChart"></canvas></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('backtestModal')">Close</button>
+        <button class="btn btn-primary" onclick="runBacktest()">&#x25B6; Run Backtest</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clear Data Modal -->
+  <div id="clearDataModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="clearDataModal-title">
+    <div class="modal-overlay" onclick="closeModal('clearDataModal')"></div>
+    <div class="modal-box small">
+      <div class="modal-header">
+        <h3 id="clearDataModal-title">Clear All Data</h3>
+        <button class="modal-close" onclick="closeModal('clearDataModal')" aria-label="Close">&#x2715;</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger">&#x26A0;&#xFE0F; This permanently deletes ALL data.</div>
+        <p>Type <strong>DELETE</strong> to confirm:</p>
+        <input type="text" id="clearDataConfirm" class="form-control" placeholder="Type DELETE">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('clearDataModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="clearAllData()">Clear Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="false"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
